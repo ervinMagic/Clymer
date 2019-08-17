@@ -1,34 +1,75 @@
-var express = require('express');
-var exphbs  = require('express-handlebars');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var port = process.env.PORT || 3000,
+    http = require('http'),
+    fs = require('fs'),
+    html = fs.readFileSync('index.html');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var log = function(entry) {
+    fs.appendFileSync('/tmp/sample-app.log', new Date().toISOString() + ' - ' + entry + '\n');
+};
 
-var app = express();
+var server = http.createServer(function (req, res) {
+    if (req.method === 'POST') {
+        var body = '';
 
-app.engine('handlebars', exphbs());
-app.set('view engine', 'handlebars');
+        req.on('data', function(chunk) {
+            body += chunk;
+        });
 
-app.get('/', function (req, res) {
-    res.render('home', {
-        showTitle: true,
-        foo: "Test App",
-        bar: function () {
-            return "Another test"
-        }
-    });
+        req.on('end', function() {
+            if (req.url === '/') {
+                log('Received message: ' + body);
+            } else if (req.url = '/scheduled') {
+                log('Received task ' + req.headers['x-aws-sqsd-taskname'] + ' scheduled at ' + req.headers['x-aws-sqsd-scheduled-at']);
+            }
+
+            res.writeHead(200, 'OK', {'Content-Type': 'text/plain'});
+            res.end();
+        });
+    } else {
+        res.writeHead(200);
+        res.write(html);
+        res.end();
+    }
 });
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+// Listen on port 3000, IP defaults to 127.0.0.1
+server.listen(port);
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// Put a friendly message on the terminal
+console.log('Server running at http://127.0.0.1:' + port + '/');
 
-module.exports = app;
+
+// var express = require('express');
+// var exphbs  = require('express-handlebars');
+// var path = require('path');
+// var cookieParser = require('cookie-parser');
+// var logger = require('morgan');
+//
+// var indexRouter = require('./routes/index');
+// var usersRouter = require('./routes/users');
+//
+// var app = express();
+//
+// app.engine('handlebars', exphbs());
+// app.set('view engine', 'handlebars');
+//
+// app.get('/', function (req, res) {
+//     res.render('home', {
+//         showTitle: true,
+//         foo: "Test App",
+//         bar: function () {
+//             return "Another test"
+//         }
+//     });
+// });
+//
+// app.use(logger('dev'));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
+// app.use(cookieParser());
+// app.use(express.static(path.join(__dirname, 'public')));
+//
+// app.use('/', indexRouter);
+// app.use('/users', usersRouter);
+//
+// module.exports = app;
