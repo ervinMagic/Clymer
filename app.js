@@ -24,7 +24,7 @@ app.get('/', function (req, res) {
     });
 });
 
-app.listen(3000)
+app.listen(port);
 
 // var server = http.createServer(function (req, res) {
 //     if (req.method === 'POST') {
