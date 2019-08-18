@@ -11,7 +11,12 @@ var log = function(entry) {
 
 var app = express();
 
-app.engine('handlebars', exphbs());
+app.engine('handlebars', exphbs({
+    extname: 'html',
+    layoutsDir: __dirname + '/views/layouts/',
+    partialsDir: __dirname + '/views/partials/'
+}));
+
 app.set('view engine', 'handlebars');
 
 app.get('/', function (req, res) {
